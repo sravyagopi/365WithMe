@@ -1,15 +1,22 @@
+// src/App.js - Main Application Component with Authentication
 import React, { useState, useEffect } from 'react';
+import { authService } from './services/authService';
 import { categoryService } from './services/categoryService';
 import { goalService } from './services/goalService';
 import { checkinService } from './services/checkinService';
 import { progressService } from './services/progressService';
 
+// Auth components
+import LoginScreen from './components/Auth/LoginScreen';
+import SignupScreen from './components/Auth/SignupScreen';
+
+// Main app components
 import WelcomeScreen from './components/Welcome/WelcomeScreen';
-import CategoriesList from './components/Categories/CategoriesList';
 import CategoryCard from './components/Categories/CategoryCard';
 import GoalCard from './components/Goals/GoalCard';
 import NewCheckInScreen from './components/CheckIn/NewCheckInScreen';
 import NewProgressScreen from './components/Progress/NewProgressScreen';
+import YearProgressView from './components/Progress/YearProgressView';
 import YearCalendar from './components/Calendar/YearCalendar';
 import DayDetailModal from './components/Calendar/DayDetailModal';
 import AddGoalModal from './components/Modals/AddGoalModal';
@@ -17,9 +24,16 @@ import EditGoalModal from './components/Modals/EditGoalModal';
 import AddCategoryModal from './components/Modals/AddCategoryModal';
 import EditCategoryModal from './components/Modals/EditCategoryModal';
 import BottomNav from './components/Navigation/BottomNav';
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 
 const App = () => {
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authView, setAuthView] = useState('login'); // 'login' or 'signup'
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // App state
   const [currentView, setCurrentView] = useState('welcome');
   const [categories, setCategories] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -36,10 +50,53 @@ const App = () => {
   const [editingGoal, setEditingGoal] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
 
+  // Check authentication on mount
   useEffect(() => {
-    fetchCategories();
-    fetchGoals();
+    checkAuth();
   }, []);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+      fetchGoals();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuth = () => {
+    const token = authService.getToken();
+    const user = authService.getCurrentUser();
+    
+    if (token && user) {
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+    }
+    setAuthLoading(false);
+  };
+
+  const handleLogin = async (credentials) => {
+    const data = await authService.login(credentials);
+    setCurrentUser(data.user);
+    setIsAuthenticated(true);
+    setCurrentView('welcome');
+  };
+
+  const handleSignup = async (userData) => {
+    const data = await authService.signup(userData);
+    setCurrentUser(data.user);
+    setIsAuthenticated(true);
+    setCurrentView('welcome');
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setCurrentView('welcome');
+    setCategories([]);
+    setGoals([]);
+    setAuthView('login');
+  };
 
   const fetchCategories = async () => {
     try {
@@ -47,6 +104,9 @@ const App = () => {
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      if (error.message.includes('401')) {
+        handleLogout(); // Token expired
+      }
       setCategories([]);
     }
   };
@@ -57,6 +117,9 @@ const App = () => {
       setGoals(data);
     } catch (error) {
       console.error('Error fetching goals:', error);
+      if (error.message.includes('401')) {
+        handleLogout(); // Token expired
+      }
       setGoals([]);
     }
   };
@@ -72,9 +135,19 @@ const App = () => {
   };
 
   const handleNavigate = (view) => {
+    console.log('Navigating to:', view);
     setCurrentView(view);
-    if (view === 'progress') fetchProgressData();
-    if (view === 'checkin') fetchGoals();
+    
+    if (view === 'progress') {
+      fetchProgressData();
+    }
+    if (view === 'checkin') {
+      fetchGoals();
+    }
+    if (view === 'yearprogress') {
+      fetchGoals();
+      fetchCategories();
+    }
   };
 
   const handleAddCategory = async (categoryData) => {
@@ -149,7 +222,6 @@ const App = () => {
       if (completed) {
         await checkinService.create(goalId, 1, null);
       }
-      // We don't delete on uncheck to preserve history
     } catch (error) {
       console.error('Error toggling daily check-in:', error);
     }
@@ -167,10 +239,8 @@ const App = () => {
 
   const handleDayClick = (date) => {
     if (typeof date === 'number') {
-      // Year change
       setCalendarYear(date);
     } else {
-      // Day clicked
       setSelectedDate(date);
     }
   };
@@ -179,10 +249,72 @@ const App = () => {
     return goals.filter(g => g.category_id === categoryId).length;
   };
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth screens if not authenticated
+  if (!isAuthenticated) {
+    if (authView === 'signup') {
+      return (
+        <SignupScreen
+          onSignup={handleSignup}
+          onSwitchToLogin={() => setAuthView('login')}
+        />
+      );
+    }
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        onSwitchToSignup={() => setAuthView('signup')}
+      />
+    );
+  }
+
+  // Main app (authenticated)
   return (
     <div className="pb-20">
+      {/* Logout button - visible on all screens except welcome */}
+      {currentView !== 'welcome' && (
+        <div className="fixed top-4 right-4 z-40">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-white shadow-lg rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+          >
+            <LogOut className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">Logout</span>
+          </button>
+        </div>
+      )}
+
       {currentView === 'welcome' && (
-        <WelcomeScreen onStartDay={() => handleNavigate('categories')} />
+        <div className="relative">
+          <WelcomeScreen onStartDay={() => handleNavigate('categories')} />
+          {/* Logout button on welcome screen */}
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-white shadow-lg rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+            >
+              <LogOut className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">Logout</span>
+            </button>
+          </div>
+          {/* Welcome message with username */}
+          <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
+            <p className="text-gray-600 text-lg">
+              Welcome back, <span className="font-semibold text-indigo-900">{currentUser?.username}</span>!
+            </p>
+          </div>
+        </div>
       )}
       
       {currentView === 'categories' && (
@@ -274,6 +406,13 @@ const App = () => {
       
       {currentView === 'progress' && (
         <NewProgressScreen progressData={progressData} />
+      )}
+      
+      {currentView === 'yearprogress' && (
+        <YearProgressView 
+          goals={goals} 
+          categories={categories}
+        />
       )}
       
       {currentView === 'calendar' && (

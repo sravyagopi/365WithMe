@@ -2,7 +2,7 @@ from database import get_db
 from repositories.checkin_repository import CheckInRepository
 from repositories.goal_repository import GoalRepository
 from datetime import date, timedelta
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 class ProgressService:
     @staticmethod
@@ -18,7 +18,6 @@ class ProgressService:
             return start, end
         elif frequency == 'monthly':
             start = today.replace(day=1)
-            # Get last day of month
             if today.month == 12:
                 end = today.replace(day=31)
             else:
@@ -29,7 +28,6 @@ class ProgressService:
             end = today.replace(month=12, day=31)
             return start, end
         else:  # custom
-            # For custom, return all-time
             return date(2020, 1, 1), date(2099, 12, 31)
     
     @staticmethod
@@ -45,16 +43,13 @@ class ProgressService:
         return labels.get(frequency, '')
     
     @staticmethod
-    def get_progress_by_frequency(frequency: str = None) -> dict:
-        """
-        Get progress for goals, optionally filtered by frequency.
-        Returns goals grouped by frequency with progress calculated dynamically.
-        """
+    def get_progress_by_frequency(user_id: int, frequency: str = None) -> dict:
+        """Get progress for goals grouped by frequency for a specific user"""
         frequencies = [frequency] if frequency else ['daily', 'weekly', 'monthly', 'yearly', 'custom']
         result = {}
         
         for freq in frequencies:
-            goals = GoalRepository.get_by_frequency(freq)
+            goals = GoalRepository.get_by_frequency(freq, user_id)
             if not goals:
                 continue
             
@@ -67,7 +62,8 @@ class ProgressService:
                 progress = CheckInRepository.get_progress_in_window(
                     goal['id'],
                     start_date.isoformat(),
-                    end_date.isoformat()
+                    end_date.isoformat(),
+                    user_id
                 )
                 
                 target = goal['target_value']
@@ -88,9 +84,9 @@ class ProgressService:
         return result
     
     @staticmethod
-    def get_goal_progress(goal_id: int) -> dict:
-        """Get current progress for a specific goal"""
-        goal = GoalRepository.get_by_id(goal_id)
+    def get_goal_progress(goal_id: int, user_id: int) -> Optional[dict]:
+        """Get current progress for a specific goal owned by user"""
+        goal = GoalRepository.get_by_id(goal_id, user_id)
         if not goal:
             return None
         
@@ -101,7 +97,8 @@ class ProgressService:
         progress = CheckInRepository.get_progress_in_window(
             goal_id,
             start_date.isoformat(),
-            end_date.isoformat()
+            end_date.isoformat(),
+            user_id
         )
         
         target = goal['target_value']
@@ -118,16 +115,12 @@ class ProgressService:
         }
     
     @staticmethod
-    def get_year_calendar(year: int = None) -> dict:
-        """
-        Get year calendar view with check-in counts per day.
-        Returns a dictionary with dates as keys and check-in counts as values.
-        """
+    def get_year_calendar(year: Optional[int], user_id: int) -> dict:
+        """Get year calendar view with check-in counts for a user"""
         if year is None:
             year = date.today().year
         
-        # Get all check-ins for the year grouped by date
-        year_summary = CheckInRepository.get_year_summary(year)
+        year_summary = CheckInRepository.get_year_summary(year, user_id)
         
         return {
             'year': year,
@@ -135,17 +128,14 @@ class ProgressService:
         }
     
     @staticmethod
-    def get_day_details(check_date: str) -> dict:
-        """
-        Get all check-ins and reflections for a specific day.
-        Used when clicking a day in the calendar view.
-        """
-        checkins = CheckInRepository.get_by_date(check_date)
+    def get_day_details(check_date: str, user_id: int) -> dict:
+        """Get all check-ins and reflections for a specific day for a user"""
+        checkins = CheckInRepository.get_by_date(check_date, user_id)
         
         # Enrich with goal information
         enriched_checkins = []
         for checkin in checkins:
-            goal = GoalRepository.get_by_id(checkin['goal_id'])
+            goal = GoalRepository.get_by_id(checkin['goal_id'], user_id)
             enriched_checkins.append({
                 **checkin,
                 'goal_title': goal['title'] if goal else 'Unknown Goal',
@@ -157,3 +147,4 @@ class ProgressService:
             'total_checkins': len(enriched_checkins),
             'checkins': enriched_checkins
         }
+

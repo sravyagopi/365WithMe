@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date
+from datetime import datetime, timedelta
+from typing import Optional
+import jwt
+import hashlib
 
 # Category Models
 class CategoryBase(BaseModel):
@@ -71,3 +75,25 @@ class GoalProgress(BaseModel):
     target_value: int
     percentage: float
     period_label: str  # "this week", "this month", etc.
+
+class UserCreate(BaseModel):
+    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class User(BaseModel):
+    id: int
+    email: str
+    username: str
+    created_at: str
+    
+    class Config:
+        from_attributes = True
+
+class UserResponse(BaseModel):
+    user: User
+    token: str

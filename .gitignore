@@ -1,0 +1,3 @@
+backend/.venv/
+backend/365withme.db
+.DS_Store

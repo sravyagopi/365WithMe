@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import init_db
 from routes import categories, goals, checkins, progress
+from routes import auth 
 
 app = FastAPI(
     title=settings.app_name,
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router) 
 app.include_router(categories.router)
 app.include_router(goals.router)
 app.include_router(checkins.router)

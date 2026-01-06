@@ -18,65 +18,66 @@ def init_db():
     with get_db() as conn:
         cursor = conn.cursor()
         
-        # Categories table
+        # Users table
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS categories (
+            CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
-        # Goals table
+        # Categories table - NOW WITH user_id
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Goals table - NOW WITH user_id
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS goals (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 title TEXT NOT NULL,
                 category_id INTEGER NOT NULL,
                 frequency TEXT NOT NULL CHECK(frequency IN ('daily', 'weekly', 'monthly', 'yearly', 'custom')),
                 target_value INTEGER DEFAULT 1,
                 is_active BOOLEAN DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
             )
         """)
         
-        # CheckIns table - Event-based, multiple rows per goal per day allowed
+        # CheckIns table - NOW WITH user_id
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS checkins (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 goal_id INTEGER NOT NULL,
                 date DATE NOT NULL,
                 value INTEGER DEFAULT 1 CHECK(value >= 0),
                 note TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
             )
         """)
         
-        # Create index for faster date-based queries
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_checkins_date 
-            ON checkins(date)
-        """)
-        
-        # Create index for faster goal-based queries
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_checkins_goal_date 
-            ON checkins(goal_id, date)
-        """)
-        
-        # Insert default categories if empty
-        cursor.execute("SELECT COUNT(*) FROM categories")
-        if cursor.fetchone()[0] == 0:
-            default_categories = [
-                "Fitness", "Personal Growth", "Financial", 
-                "Relationships", "Community", "Self-Care"
-            ]
-            cursor.executemany(
-                "INSERT INTO categories (title) VALUES (?)",
-                [(cat,) for cat in default_categories]
-            )
+        # Create indexes for performance
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_user ON checkins(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_date ON checkins(date)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_goal_date ON checkins(goal_id, date)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
         
         conn.commit()
 
