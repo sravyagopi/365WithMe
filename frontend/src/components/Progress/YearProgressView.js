@@ -23,34 +23,35 @@ const YearProgressView = ({ goals, categories }) => {
     try {
       const progressData = {};
       
+      // Import checkinService to use authenticated API
+      const { checkinService } = await import('../../services/checkinService');
+      
       // Fetch check-ins for each goal for the entire year
       for (const goal of goals) {
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
         
         console.log(`Fetching check-ins for goal ${goal.id}: ${goal.title}`);
-        const response = await fetch(
-          `http://localhost:8000/checkins/goal/${goal.id}?start_date=${startDate}&end_date=${endDate}`
-        );
         
-        if (!response.ok) {
-          console.error(`Failed to fetch check-ins for goal ${goal.id}`);
-          continue;
+        try {
+          // Use the service which handles auth automatically
+          const checkins = await checkinService.getByGoal(goal.id, startDate, endDate);
+          console.log(`Goal ${goal.id} has ${checkins.length} check-ins`);
+          
+          // Group by date
+          const byDate = {};
+          checkins.forEach(checkin => {
+            if (!byDate[checkin.date]) {
+              byDate[checkin.date] = 0;
+            }
+            byDate[checkin.date] += checkin.value;
+          });
+          
+          progressData[goal.id] = byDate;
+        } catch (error) {
+          console.error(`Failed to fetch check-ins for goal ${goal.id}:`, error);
+          progressData[goal.id] = {};
         }
-        
-        const checkins = await response.json();
-        console.log(`Goal ${goal.id} has ${checkins.length} check-ins`);
-        
-        // Group by date
-        const byDate = {};
-        checkins.forEach(checkin => {
-          if (!byDate[checkin.date]) {
-            byDate[checkin.date] = 0;
-          }
-          byDate[checkin.date] += checkin.value;
-        });
-        
-        progressData[goal.id] = byDate;
       }
       
       console.log('All progress data:', progressData);
@@ -138,9 +139,36 @@ const YearProgressView = ({ goals, categories }) => {
     const values = Object.values(dates);
     const maxValue = values.length > 0 ? Math.max(...values) : 1;
     
+    // Filter days based on view
+    let displayDays = days;
+    if (view === 'week') {
+      // Show current week only
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      displayDays = days.filter(d => d >= startOfWeek && d <= endOfWeek);
+    } else if (view === 'month') {
+      // Show current month only
+      const today = new Date();
+      displayDays = days.filter(d => 
+        d.getMonth() === today.getMonth() && 
+        d.getFullYear() === today.getFullYear()
+      );
+    }
+    
+    const gridCols = view === 'week' ? 'grid-cols-7' : 
+                     view === 'month' ? 'grid-cols-31' : 
+                     'grid-cols-53';
+    const squareSize = view === 'week' ? 'w-8 h-8' : 
+                      view === 'month' ? 'w-3 h-3' : 
+                      'w-2 h-2';
+    
     return (
-      <div className="grid grid-cols-53 gap-1">
-        {days.map((day, index) => {
+      <div className={`grid ${gridCols} gap-1`}>
+        {displayDays.map((day, index) => {
           const dateStr = day.toISOString().split('T')[0];
           const value = dates[dateStr] || 0;
           const intensity = value / maxValue;
@@ -185,7 +213,7 @@ const YearProgressView = ({ goals, categories }) => {
           return (
             <div
               key={index}
-              className={`w-2 h-2 ${bgColor} rounded-sm`}
+              className={`${squareSize} ${bgColor} rounded-sm`}
               title={`${dateStr}: ${value} check-in${value !== 1 ? 's' : ''}`}
             />
           );
