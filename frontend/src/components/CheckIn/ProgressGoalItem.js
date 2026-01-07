@@ -111,4 +111,3 @@ const ProgressGoalItem = ({ goal, frequency, onAddProgress }) => {
 };
 
 export default ProgressGoalItem;
-

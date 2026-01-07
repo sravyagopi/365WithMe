@@ -16,13 +16,12 @@ const YearCalendar = ({ year, onDayClick }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost:8000/progress/calendar/${year}`);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Import progressService to use authenticated API
+      const { progressService } = await import('../../services/progressService');
       
-      const data = await response.json();
+      console.log('Fetching calendar data for year:', year);
+      const data = await progressService.getYearCalendar(year);
       console.log('Calendar data received:', data);
       
       setCalendarData(data.calendar || {});
@@ -170,6 +169,14 @@ const YearCalendar = ({ year, onDayClick }) => {
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
+        </div>
+
+        {/* Debug info */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800">
+            <strong>Debug Info:</strong> {Object.keys(calendarData).length} days with check-ins, 
+            Max: {maxCheckins} check-ins per day
+          </p>
         </div>
 
         <div className="mb-6 flex items-center gap-4 text-sm text-gray-600">

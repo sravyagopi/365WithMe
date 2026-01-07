@@ -1,4 +1,3 @@
-// src/App.js - Main Application Component with Authentication
 import React, { useState, useEffect } from 'react';
 import { authService } from './services/authService';
 import { categoryService } from './services/categoryService';
@@ -297,7 +296,7 @@ const App = () => {
 
       {currentView === 'welcome' && (
         <div className="relative">
-          <WelcomeScreen onStartDay={() => handleNavigate('categories')} />
+          <WelcomeScreen onStartDay={() => handleNavigate('checkin')} />
           {/* Logout button on welcome screen */}
           <div className="absolute top-4 right-4">
             <button
