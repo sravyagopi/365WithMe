@@ -107,7 +107,10 @@ const YearProgressView = ({ goals, categories }) => {
     
     // For frequency-based goals, calculate based on target
     if (goal.frequency === 'daily') {
-      return Math.round((completedDays / totalDays) * 100);
+      const daysInYear = 365;
+      const totalCheckins = Object.values(dates).reduce((sum, val) => sum + val, 0);
+      const expectedTotal = daysInYear * goal.target_value;
+      return Math.round((totalCheckins / expectedTotal) * 100);
     } else if (goal.frequency === 'weekly') {
       const weeksInYear = 52;
       const totalCheckins = Object.values(dates).reduce((sum, val) => sum + val, 0);

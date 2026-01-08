@@ -22,7 +22,7 @@ class Category(CategoryBase):
     class Config:
         from_attributes = True
 
-# Goal Models - UPDATED with new frequencies
+# Goal Models
 class GoalBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     category_id: int
@@ -46,11 +46,11 @@ class Goal(GoalBase):
     class Config:
         from_attributes = True
 
-# CheckIn Models - UPDATED to support progress value
+# CheckIn Models
 class CheckInBase(BaseModel):
     goal_id: int
     date: str
-    value: int = Field(default=1, ge=0)  # Changed from completed boolean
+    value: int = Field(default=1, ge=0)
     note: Optional[str] = None
 
 class CheckInCreate(CheckInBase):
@@ -77,17 +77,15 @@ class GoalProgress(BaseModel):
     period_label: str  # "this week", "this month", etc.
 
 class UserCreate(BaseModel):
-    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
 
 class UserLogin(BaseModel):
-    email: str
+    username: str
     password: str
 
 class User(BaseModel):
     id: int
-    email: str
     username: str
     created_at: str
     

@@ -12,12 +12,12 @@ def verify_password(password: str, password_hash: str) -> bool:
     """Verify password against hash"""
     return hash_password(password) == password_hash
 
-def create_access_token(user_id: int, email: str) -> str:
+def create_access_token(user_id: int, username: str) -> str:
     """Create JWT access token"""
     expiration = datetime.utcnow() + timedelta(hours=settings.jwt_expiration_hours)
     payload = {
         'user_id': user_id,
-        'email': email,
+        'username': username,
         'exp': expiration,
         'iat': datetime.utcnow()
     }

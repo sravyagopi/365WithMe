@@ -65,7 +65,7 @@ const EditGoalModal = ({ goal, categories, onSubmit, onClose }) => {
             </select>
           </div>
 
-          {formData.frequency !== 'daily' && formData.frequency !== 'custom' && (
+          {formData.frequency !== 'custom' && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Target Value *
@@ -78,6 +78,7 @@ const EditGoalModal = ({ goal, categories, onSubmit, onClose }) => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
+                {formData.frequency === 'daily' && 'Times per day'}
                 {formData.frequency === 'weekly' && 'Times per week'}
                 {formData.frequency === 'monthly' && 'Times per month'}
                 {formData.frequency === 'yearly' && 'Times per year'}

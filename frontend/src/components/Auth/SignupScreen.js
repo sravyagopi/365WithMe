@@ -3,7 +3,6 @@ import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 
 const SignupScreen = ({ onSignup, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
-    email: '',
     username: '',
     password: '',
     confirmPassword: ''
@@ -19,7 +18,7 @@ const SignupScreen = ({ onSignup, onSwitchToLogin }) => {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.username || !formData.password) {
+    if (!formData.username || !formData.password) {
       setError('All fields are required');
       return false;
     }
@@ -39,12 +38,6 @@ const SignupScreen = ({ onSignup, onSwitchToLogin }) => {
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-
     return true;
   };
 
@@ -60,7 +53,6 @@ const SignupScreen = ({ onSignup, onSwitchToLogin }) => {
 
     try {
       await onSignup({
-        email: formData.email,
         username: formData.username,
         password: formData.password
       });
@@ -99,21 +91,6 @@ const SignupScreen = ({ onSignup, onSwitchToLogin }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="you@example.com"
-            />
-          </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">

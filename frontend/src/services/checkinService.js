@@ -21,7 +21,7 @@ export const checkinService = {
 
   // ALWAYS creates a new check-in event (no update logic)
   create: async (goalId, value = 1, note = null, date = null) => {
-    const checkInDate = date || new Date().toISOString().split('T')[0];
+    const checkInDate = date || getESTDate();
     return apiService.post(API_ENDPOINTS.CHECKINS, {
       goal_id: goalId,
       date: checkInDate,
@@ -34,3 +34,18 @@ export const checkinService = {
     return apiService.delete(`${API_ENDPOINTS.CHECKINS}/${id}`);
   },
 };
+
+export function getESTDate() {
+  const now = new Date();
+
+  const estString = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
+
+  // Convert MM/DD/YYYY → YYYY-MM-DD
+  const [month, day, year] = estString.split("/");
+  return `${year}-${month}-${day}`;
+}

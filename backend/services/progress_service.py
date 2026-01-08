@@ -96,8 +96,8 @@ class ProgressService:
         # Calculate progress dynamically
         progress = CheckInRepository.get_progress_in_window(
             goal_id,
-            start_date.isoformat(),
-            end_date.isoformat(),
+            start_date,
+            end_date,
             user_id
         )
         

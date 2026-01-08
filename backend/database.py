@@ -22,7 +22,6 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL UNIQUE,
                 username TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -77,7 +76,7 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_user ON checkins(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_date ON checkins(date)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_checkins_goal_date ON checkins(goal_id, date)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
         
         conn.commit()
 

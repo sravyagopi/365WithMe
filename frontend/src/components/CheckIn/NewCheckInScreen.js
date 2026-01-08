@@ -90,13 +90,7 @@ const NewCheckInScreen = ({ goals, onAddProgress, onToggleDaily, onNavigateToCat
 
                 <div className="space-y-3">
                   {sectionGoals.map(goal => 
-                    section.key === 'daily' ? (
-                      <DailyGoalItem
-                        key={goal.id}
-                        goal={goal}
-                        onToggle={onToggleDaily}
-                      />
-                    ) : (
+                    (
                       <ProgressGoalItem
                         key={goal.id}
                         goal={goal}

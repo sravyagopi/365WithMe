@@ -14,7 +14,7 @@ async def signup(user_data: UserCreate):
     """
     try:
         user = UserRepository.create(user_data)
-        token = create_access_token(user['id'], user['email'])
+        token = create_access_token(user['id'], user['username'])
         
         return {
             "user": user,
@@ -34,19 +34,19 @@ async def signup(user_data: UserCreate):
 @router.post("/login", response_model=UserResponse)
 async def login(credentials: UserLogin):
     """
-    Login with email and password.
+    Login with username and password.
     Returns user data and JWT token.
     """
-    user = UserRepository.authenticate(credentials.email, credentials.password)
+    user = UserRepository.authenticate(credentials.username, credentials.password)
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    token = create_access_token(user['id'], user['email'])
+    token = create_access_token(user['id'], user['username'])
     
     return {
         "user": user,

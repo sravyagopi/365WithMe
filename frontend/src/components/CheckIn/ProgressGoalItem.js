@@ -22,10 +22,11 @@ const ProgressGoalItem = ({ goal, frequency, onAddProgress }) => {
 
   const getButtonLabel = () => {
     const labels = {
-      weekly: '+ Add Session',
+      daily: '+ Log Activity',
+      weekly: '+ Log Activity',
       monthly: '+ Log Activity',
-      yearly: '+ Add Entry',
-      custom: '+ I showed up today'
+      yearly: '+ Log Activity',
+      custom: '+ Log Activity'
     };
     return labels[frequency] || '+ Add';
   };

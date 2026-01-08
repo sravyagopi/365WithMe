@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LogIn, AlertCircle } from 'lucide-react';
 
 const LoginScreen = ({ onLogin, onSwitchToSignup }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,9 +13,9 @@ const LoginScreen = ({ onLogin, onSwitchToSignup }) => {
     setLoading(true);
 
     try {
-      await onLogin({ email, password });
+      await onLogin({ username, password });
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      setError(err.message || 'Invalid username or password');
     } finally {
       setLoading(false);
     }
@@ -41,16 +41,16 @@ const LoginScreen = ({ onLogin, onSwitchToSignup }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
+              Username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="you@example.com"
+              placeholder="Username"
             />
           </div>
 

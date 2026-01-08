@@ -6,7 +6,7 @@ const GoalCard = ({ goal, onEdit, onDelete }) => {
 
   const getFrequencyLabel = () => {
     const labels = {
-      daily: 'Daily',
+      daily: `${goal.target_value}x per day`,
       weekly: `${goal.target_value}x per week`,
       monthly: `${goal.target_value}x per month`,
       yearly: `${goal.target_value}x per year`,

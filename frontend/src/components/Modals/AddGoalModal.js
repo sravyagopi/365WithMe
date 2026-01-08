@@ -59,7 +59,7 @@ const AddGoalModal = ({ categories, selectedCategory, onSubmit, onClose }) => {
               onChange={(e) => setFormData({...formData, frequency: e.target.value})}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             >
-              <option value="daily">Daily - Complete each day</option>
+              <option value="daily">Daily - Target per day</option>
               <option value="weekly">Weekly - Target per week</option>
               <option value="monthly">Monthly - Target per month</option>
               <option value="yearly">Yearly - Annual target</option>
@@ -67,7 +67,7 @@ const AddGoalModal = ({ categories, selectedCategory, onSubmit, onClose }) => {
             </select>
           </div>
 
-          {formData.frequency !== 'daily' && formData.frequency !== 'custom' && (
+          {formData.frequency !== 'custom' && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Target Value *
@@ -80,6 +80,7 @@ const AddGoalModal = ({ categories, selectedCategory, onSubmit, onClose }) => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
+                {formData.frequency === 'daily' && 'How many times per day?'}
                 {formData.frequency === 'weekly' && 'How many times per week?'}
                 {formData.frequency === 'monthly' && 'How many times per month?'}
                 {formData.frequency === 'yearly' && 'How many times per year?'}
